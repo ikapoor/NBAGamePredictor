@@ -2,7 +2,9 @@ import pandas as pd
 
 from src.constants import (
 	teams,
-	seasons
+	seasons,
+	stats
+
 )
 
 
@@ -21,4 +23,4 @@ def get_team_season(team, start_year):
 		print("data not available")
 		return None
 	return pd.read_csv('data/{}_{}.csv'.format(team, start_year))
-L
+
