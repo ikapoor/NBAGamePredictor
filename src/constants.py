@@ -16,4 +16,5 @@ seasons = {
     '2017': '2017-2018.csv',
 }
 
+game_fields=  ['Team', 'Game', 'Home', 'Opponent', 'WINorLOSS', 'Date']
 

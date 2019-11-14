@@ -3,9 +3,23 @@ import pandas as pd
 from src.constants import (
 	teams,
 	seasons,
-	stats
+	stats,
+	game_fields
 
 )
+#
+#
+# def shift(team, season):
+# 	df = get_team_season(team, season)
+# 	drop = [col for col in df.columns if 'Unnamed' in col]
+# 	df.drop(drop, axis=1, inplace=True)
+# 	shift = list(df.columns.copy())
+# 	keep = game_fields + stats + ['Opp.{}'.format(stat) for stat in stats]
+# 	for col in keep:
+# 		shift.remove(col)
+# 	for col in shift:
+# 		df[col] = df[col].shift(1)
+# 	return df
 
 
 def get_season(start_year):
@@ -23,4 +37,33 @@ def get_team_season(team, start_year):
 		print("data not available")
 		return None
 	return pd.read_csv('data/{}_{}.csv'.format(team, start_year))
+
+# for team in teams:
+# 	for season in seasons:
+# 		df = shift(team, season)
+# 		df.to_csv('data/{}_{}.csv'.format(team, season))
+#
+
+
+def transform(team, year):
+	df = get_team_season(team, year)
+	keep = stats + ['Opp.{}'.format(stat) for stat in stats]
+	keep = keep + game_fields
+	drop = [stat for stat in list(df.columns) if stat not in keep]
+	df.drop(drop, axis=1, inplace=True)
+	for stat in stats:
+		df['differential_{}'.format(stat)] = df.apply(lambda row: row[stat] - row['Opp.{}'.format(stat)], axis=1)
+		df['cumalitive_differential_{}'.format(stat)] = df['differential_{}'.format(stat)].cumsum().shift(1)
+		df['cumalitive_{}'.format(stat)] = df[stat].cumsum().shift()
+		df['cumalitive_Opp.{}'.format(stat)] = df['Opp.{}'.format(stat)].cumsum().shift()
+		df['average_{}'.format(stat)] = df.apply(lambda row: (row['cumalitive_{}'.format(stat)]/(row['Game']-1)) if row['Game'] !=1 else 0, axis=1)
+		df['average_Opp.{}'.format(stat)] = df.apply(lambda row: (row['cumalitive_Opp.{}'.format(stat)]/(row['Game']-1))if row['Game'] !=1 else 0, axis=1)
+		df['average_differential_{}'.format(stat)] = df.apply(lambda row: (row['cumalitive_differential_{}'.format(stat)]/(row['Game']-1)) if row['Game'] !=1 else 0, axis=1)
+	drop = ['cumalitive_differential_{}'.format(stat) for stat in stats] + ['cumalitive_{}'.format(stat)for stat in stats] + ['cumalitive_Opp.{}'.format(stat) for stat in stats]
+	df.drop(drop, axis=1, inplace=True)
+
+	return df
+
+
+
 
