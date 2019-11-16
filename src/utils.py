@@ -23,7 +23,7 @@ def get_team_season(team, start_year):
 	if start_year not in seasons.keys():
 		print("data not available")
 		return None
-	return pd.read_csv('data/{}_{}.csv'.format(team, start_year))
+	return pd.read_csv('../data/{}_{}.csv'.format(team, start_year))
 
 def add_average_and_differential_stats(team, year):
 	df = get_team_season(team, year)
