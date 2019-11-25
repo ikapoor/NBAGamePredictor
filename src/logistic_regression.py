@@ -16,14 +16,43 @@ from src.constants import (
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-TEAM  = 'TOR'
-
-
-df = get_team_season(TEAM, '2017')
+df = get_team_season('TOR', '2014')
 opp_stats = ['Opp.{}'.format(stat) for stat in stats]
-features = [col for col in df.columns if (col not in opp_stats and col not in stats and col not in game_fields)]
+diff = ['differential_{}'.format(stat) for stat in stats]
+features = [col for col in df.columns if (col not in opp_stats and col not in stats and col not in game_fields and col not in diff)]
 
-df['Win'] = df.apply(lambda row: int(1) if row['WINorLOSS'] == 'W' else int(0), axis=1)
+TEAM = 'TOR'
+season_2014 = {}
+season_2017 = {}
+x_train = pd.DataFrame()
+x = pd.DataFrame()
+for team in teams:
+    df = get_team_season(team, '2014')
+    df['Win'] = df.apply(lambda row: int(1) if row['WINorLOSS'] == 'W' else int(0), axis=1)
+    x_train = x_train.append(df)
+    season_2014[team] = df
+
+for team in teams:
+    df = get_team_season(team, '2017')
+    df['Win'] = df.apply(lambda row: int(1) if row['WINorLOSS'] == 'W' else int(0), axis=1)
+    x = x.append(df)
+    season_2017[team] = df
+
+
+for feature in features:
+    x_train['Opp_{}'.format(feature)] = x_train.apply(lambda game: x_train[(x_train.Date == game.Date) & (x_train.Team == game.Opponent)].iloc[0][feature], axis=1)
+
+
+
+y_train = x_train['Win'].as_matrix()
+x_train = x_train[features].copy().as_matrix()
+
+
+
+
+# df = get_team_season(TEAM, '2017')
+
+
 
 
 
@@ -37,27 +66,24 @@ df['Win'] = df.apply(lambda row: int(1) if row['WINorLOSS'] == 'W' else int(0), 
 # #     n_redundant=0,
 # #     n_repeated=0
 # # )
-x = df[features].copy().as_matrix()
 
-y = df['Win'].as_matrix()
-x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=1)
-lr = LogisticRegression()
-# y = y.as_matrix(columns=None)
-
-
-
-
+# lr = LogisticRegression()
 #
-lr.fit(x, y)
-
-print(lr.coef_)
-print(lr.intercept_)
-
 #
+#
+#
+#
+# #
+# lr.fit(x_train, y_train)
+#
+# print(lr.coef_)
+# print(lr.intercept_)
 
-# y_pred = lr.predict(x_test)
-# print(y_pred)
-# print(confusion_matrix(y_test, y_pred))
+# #
+#
+# # y_pred = lr.predict(x_test)
+# # print(y_pred)
+# # print(confusion_matrix(y_test, y_pred))
 correct_predictions = 0
 incorrect_predictions = 0
 for team in teams:
